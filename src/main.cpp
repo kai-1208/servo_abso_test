@@ -21,18 +21,19 @@ int64_t total_count = 0;
 bool is_initialized = false;
 
 DigitalIn limit_sw2(PC_11), limit_sw5(PC_1), button(BUTTON1);
+// DigitalIn limit_laser1(PC_5), limit_laser2(PC_6), limit_laser3(PC_7);
 
 // 角度型pid
 PidParameter pos_param = {
-    .gain = PidGain{.kp = 30.0f, .ki = 0.0f, .kd = 8.0f},
-    .min = -3000.0f,
-    .max = 3000.0f
+    .gain = PidGain{.kp = 14.0f, .ki = 0.0f, .kd = 0.0f},
+    .min = -1000.0f,
+    .max = 1000.0f
 };
 Pid pos_pid(pos_param);
 
 // 速度型pid
 PidParameter vel_param = {
-    .gain = PidGain{.kp = 8.0f, .ki = 0.0f, .kd = 0.0f},
+    .gain = PidGain{.kp = 5.0f, .ki = 0.0f, .kd = 0.001f},
     .min = -16000.0f,
     .max = 16000.0f
 };
@@ -151,8 +152,9 @@ int main() {
                 // printf("servo: %d, %d, %d\n", servo[0], servo[1], servo[2]);
                 // CANMessage msg1(140, reinterpret_cast<const uint8_t *> (servo.data ()), 8);
                 // can1.write (msg1);
-                if (buf[0] == '1') target_angle = 90.0f;
-                else if (buf[0] == '2') target_angle = 0.0f;
+                if (buf[0] == '1') target_angle = 0.0f;
+                else if (buf[0] == '2') target_angle = -120.0f;
+                else if (buf[0] == '3') target_angle = -190.0f;
             }
 
             float curr_rpm = mech_brushless.get_rpm(2);
@@ -166,16 +168,14 @@ int main() {
             //     print_count = 0;
             // }
             mech_brushless.set_power(2, (int16_t)pid_output);
-            mech_brushless.send_message();
+            // mech_brushless.send_message();
 
             if (button.read() == 0) {
-                if (servo[0] == SERVO_POS_LOW) {
-                    for (int i = 0; i < 3; i++) servo[i] = SERVO_POS_HIGH;
-                } else {
-                    for (int i = 0; i < 3; i++) servo[i] = SERVO_POS_LOW;
-                }
-                // printf("servo: %d, %d, %d\n", servo[0], servo[1], servo[2]);
+                for (int i = 0; i < 4; i++) servo[i] = SERVO_POS_HIGH;
+            } else {
+                for (int i = 0; i < 4; i++) servo[i] = SERVO_POS_LOW;
             }
+            servo[2] = 0;
             CANMessage msg1(140, reinterpret_cast<const uint8_t *> (servo.data ()), 8);
             can1.write (msg1);
         }
