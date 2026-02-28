@@ -25,7 +25,7 @@ DigitalIn limit_sw2(PC_11), limit_sw5(PC_1), button(BUTTON1);
 
 // 角度型pid
 PidParameter pos_param = {
-    .gain = PidGain{.kp = 14.0f, .ki = 0.0f, .kd = 0.0f},
+    .gain = PidGain{.kp = 16.0f, .ki = 0.0f, .kd = 0.0f},
     .min = -1000.0f,
     .max = 1000.0f
 };
@@ -33,9 +33,9 @@ Pid pos_pid(pos_param);
 
 // 速度型pid
 PidParameter vel_param = {
-    .gain = PidGain{.kp = 5.0f, .ki = 0.0f, .kd = 0.001f},
-    .min = -16000.0f,
-    .max = 16000.0f
+    .gain = PidGain{.kp = 8.0f, .ki = 0.0f, .kd = 0.005f},
+    .min = -10000.0f,
+    .max = 10000.0f
 };
 Pid vel_pid(vel_param);
 
@@ -171,13 +171,17 @@ int main() {
             // mech_brushless.send_message();
 
             if (button.read() == 0) {
-                for (int i = 0; i < 4; i++) servo[i] = SERVO_POS_HIGH;
+                for (int i = 0; i < 8; i++) servo[i] = SERVO_POS_HIGH;
             } else {
-                for (int i = 0; i < 4; i++) servo[i] = SERVO_POS_LOW;
+                for (int i = 0; i < 8; i++) servo[i] = SERVO_POS_LOW;
             }
-            servo[2] = 0;
             CANMessage msg1(140, reinterpret_cast<const uint8_t *> (servo.data ()), 8);
-            can1.write (msg1);
+            // can1.write (msg1);
+            if (can1.write (msg1)) {
+                printf("Sent servo command: %d\n", servo[0]);
+            } else {
+                printf("Failed to send servo command\n");
+            }
         }
 
         // if (mechanism_loop_dt > 0.001f) {
